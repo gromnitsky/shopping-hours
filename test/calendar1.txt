@@ -1,0 +1,34 @@
+# A working hours example for a mom&pop online store (Ukraine-specific)
+
+# rows are in order of increasing precedence
+
+-/-			9:00-13:00,14:00-18:00
+
+1/1			0:0-0:0			o	new year
+2/1			12:30-15:30		-	a handover from 1/1
+7/1			11:00-17:00		o	xmas (don't ask)
+
+8/3			09:00-15:00		o	iwd
+
+# TODO
+#easter_orthodox		0:0-0:0			o
+#easter_catholic		0:0-0:0			o
+#pentecost_orthodox	0:0-0:0			o
+
+1/5			11:00-17:30		o	why is it still a thing?
+9/5			11:00-17:30		o	1939-1945 remembrance
+
+28/6			0:0-0:0			o	Constitution Day
+
+24/8			0:0-0:0			o	Independence Day
+
+14/11			11:00-17:30		o	Defender of Ukraine Day
+fri.4/11		6:30-23:00		-	black friday
+
+25/12			11:00-17:00		o	xmas
+
+sat/-			10:30-17:00
+sun/-			0:0-0:0
+
+# for 'o' events only, unless it's explicitly overridden
+double-holiday-if-saturday = true
