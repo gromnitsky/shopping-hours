@@ -14,6 +14,25 @@ exports.parser = function(input, opt) {
     opt = opt || {}
     let today = () => new Date(opt.today || new Date())
 
+    // return local day of the month
+    let dow_find = function(/* human */month, dow, week_num) {
+	let d = new Date(today())
+	d.setMonth(month-1)
+	let dow2js = { 'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4,
+		       'fri': 5, 'sat': 6, 'sun': 0 }
+	let counter = 0
+	let last
+	for (let day = 1; d.getMonth()+1 === month; ++day) {
+	    d.setDate(day)
+	    if (d.getDay() === dow2js[dow]) {
+		last = d.getDate()
+		counter++
+	    }
+	    if (counter === week_num) return d.getDate()
+	}
+	return week_num === -1 ? last : -1
+    }
+
     let parse_date = function(line, val) {
 	let mnorm = (str) => {
 	    if (str === '-') return str
@@ -22,7 +41,7 @@ exports.parser = function(input, opt) {
 		throw new ParseError(line, `invalid month: ${str}`)
 	    return n
 	}
-	let dnorm = (str) => {
+	let dnorm = (month, str) => {
 	    if (str === '-') return str
 
 	    let error = new ParseError(line, `invalid day: ${str}`)
@@ -38,7 +57,9 @@ exports.parser = function(input, opt) {
 		if (week === 'last') week = -1
 		week = Number(week)
 		if (isNaN(week) || week < -1 || week === 0 || week > 6) throw error
-		// todo
+		let dow = dow_find(month, d, week)
+		if (dow === -1) throw error
+		return dow
 	    }
 	    if (n < 1 || n > 31) throw error
 	    return n
@@ -49,7 +70,8 @@ exports.parser = function(input, opt) {
 	    throw new ParseError(line, `${val} is unsupported`)
 	}
 	let [day, month] = val.split('/')
-	return { day: dnorm(day), month: mnorm(month) }
+	month = mnorm(month)
+	return { day: dnorm(month, day), month }
     }
 
     let parse_hours_out_of = function(line, val) {
