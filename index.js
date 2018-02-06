@@ -19,7 +19,6 @@ let dup = function(o) {
 
 exports.parser = function(input, opt) {
     opt = opt || {}
-    let today = () => new Date(opt.today || new Date())
 
     let parse_date = function(line, val) {
 	let mnorm = (str) => {
@@ -98,9 +97,9 @@ exports.parser = function(input, opt) {
     }
 
     // resolve all the dates in pdata, e.g., fri.4/11 becomes 23/11
-    let resolve = function(pdata) {
+    let resolve = function(today, pdata) {
 	let variable = (name) => pdata.vars[name].val
-	let now = today()
+	let now = new Date(today || new Date())
 
 	let r = { vars: pdata.vars, events: {/* we are filling it */} }
 	pdata.events.forEach( evt => {
@@ -132,8 +131,8 @@ exports.parser = function(input, opt) {
 	    if (variable('double-holiday-if-saturday') === 'true'
 		&& flag('o')
 		&& exports.dow(now, month, date) === 'sun') {
-		let d = exports.date_next(now, month, date+1)
-		let holiday = `${d.getDate()}/${d.getMonth()+1}`
+		let d = exports.date_next(now, month, date)
+		let holiday = date2dm(d)
 		r.events[holiday] = dup(event_data) // copy to the cur event
 		r.events[holiday].val.flags += 'g' // mark as 'generated'
 	    }
@@ -141,18 +140,53 @@ exports.parser = function(input, opt) {
 	return r
     }
 
-    return {parse, resolve}
+    let business = function(pdata, today) {
+	let cal = resolve(today, pdata)
+	let now = new Date(today || new Date())
+	let dm = date2dm(now)
+	let entry = cal.events[dm]
+	if (!entry) throw new Error('no default entry in calendar')
+
+	for (let range of entry.val.hours) {
+	    let start = new Date(now).setUTCHours(range.from.h, range.from.m, 0)
+	    let end = new Date(now).setUTCHours(range.to.h, range.to.m, 0)
+	    if (now >= start && now <= end) return {
+		status: 'open',
+		next: end
+	    }
+	}
+
+	let tomorrow = exports.date_next(now)
+	cal = resolve(tomorrow, pdata)
+	let range = cal.events[date2dm(tomorrow)].val.hours
+	tomorrow.setUTCHours(range[0].from.h, range[0].from.m, 0)
+	return {
+	    status: 'closed',
+	    next: tomorrow
+	}
+    }
+
+    return {parse, resolve, business}
 }
 
-exports.date_next = function(today, /* human */month, date) {
+let date2dm = function(d) {
+    return `${d.getDate()}/${d.getMonth()+1}`
+}
+
+let getdate = function(today, /* human */month, date) {
     let d = new Date(today)
-    d.setMonth(month-1)
+    d.setMonth(month - 1)
     d.setDate(date)
     return d
 }
 
+exports.date_next = function(today, /* human */month, date) {
+    return getdate(today, month || today.getMonth() + 1,
+		   (date || today.getDate()) + 1)
+}
+
 exports.dow = function(today, /* human */month, date) {
-    return num2dow[exports.date_next(today, month, date).getDay()]
+    return num2dow[getdate(today, month, date).getDay()]
 }
 
 // return local day of the month, -1 on error
@@ -212,5 +246,6 @@ if (__filename === process.argv[1]) {
     let parser = exports.parser(fs.readFileSync(process.argv[2]).toString())
     let pdata = parser.parse()
     console.log(util.inspect(pdata, {depth: null}))
-    console.log(util.inspect(parser.resolve(pdata), {depth: null}))
+    console.log(util.inspect(parser.resolve(process.argv[3], pdata), {depth: null}))
+    console.log(parser.business(pdata, process.argv[3]))
 }
