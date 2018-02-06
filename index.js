@@ -148,21 +148,25 @@ exports.parser = function(input, opt) {
 	if (!entry) throw new Error('no default entry in calendar')
 
 	for (let range of entry.val.hours) {
-	    let start = new Date(now).setUTCHours(range.from.h, range.from.m, 0)
-	    let end = new Date(now).setUTCHours(range.to.h, range.to.m, 0)
+	    let start = new Date(now).setHours(range.from.h, range.from.m, 0)
+	    if (start > now) return { // smth like a lunch break
+		status: 'closed',
+		next: new Date(start) // opens at
+	    }
+	    let end = new Date(now).setHours(range.to.h, range.to.m, 0)
 	    if (now >= start && now <= end) return {
 		status: 'open',
-		next: end
+		next: new Date(end) // closes at
 	    }
 	}
 
 	let tomorrow = exports.date_next(now)
 	cal = resolve(tomorrow, pdata)
 	let range = cal.events[date2dm(tomorrow)].val.hours
-	tomorrow.setUTCHours(range[0].from.h, range[0].from.m, 0)
+	tomorrow.setHours(range[0].from.h, range[0].from.m, 0)
 	return {
 	    status: 'closed',
-	    next: tomorrow
+	    next: tomorrow	// opens at
 	}
     }
 
