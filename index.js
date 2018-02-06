@@ -160,10 +160,19 @@ exports.parser = function(input, opt) {
 	    }
 	}
 
-	let tomorrow = exports.date_next(now)
-	cal = resolve(tomorrow, pdata)
-	let range = cal.events[date2dm(tomorrow)].val.hours
-	tomorrow.setHours(range[0].from.h, range[0].from.m, 0)
+	let tomorrow
+	while (1) {
+	    tomorrow = exports.date_next(now)
+	    cal = resolve(tomorrow, pdata)
+	    let range = cal.events[date2dm(tomorrow)].val.hours
+	    if ( !(range[0].from.h === range[0].to.h
+		   && range[0].from.m === range[0].to.m)) {
+		tomorrow.setHours(range[0].from.h, range[0].from.m, 0)
+		break
+	    } else {
+		now = tomorrow
+	    }
+	}
 	return {
 	    status: 'closed',
 	    next: tomorrow	// opens at
