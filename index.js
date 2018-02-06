@@ -79,7 +79,11 @@ exports.parser = function(input, opt) {
     }
 
     let parse_hours_shopping = function(line, val) {
-	return val
+	return val.split(',').map( v => {
+	    try {
+		return exports.timerange(v)
+	    } catch (e) { throw new ParseError(line, e.message) }
+	})
     }
 
     let parse = function() {
@@ -115,6 +119,30 @@ exports.parser = function(input, opt) {
     }
 
     return {parse}
+}
+
+exports.time = function(spec) {
+    let error = new Error(`invalid time: ${spec}`)
+    let arr = spec.split(':')
+    if (arr.length !== 2) throw error
+
+    let [h, m] = arr.map( v => {
+	let n = Number(v)
+	if (isNaN(n) || n < 0) throw error
+	return n
+    });
+    if (h > 23 || h > 59) throw error
+    return {h, m}
+}
+
+exports.timerange = function(t) {
+    let error = new Error(`invalid time range: ${t}`)
+    let arr = t.split('-')
+    if (arr.length !== 2) throw error
+
+    let [from, to] = arr.map( v => exports.time(v))
+    if (from.h > to.h || (from.h === to.h && from.m > to.m)) throw error
+    return {from, to}
 }
 
 if (__filename === process.argv[1]) {
