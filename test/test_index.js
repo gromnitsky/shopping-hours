@@ -36,4 +36,8 @@ suite('Example', function() {
     test('dow_find', function() {
 	assert.equal(23, so.dow_find(new Date('2018-01-01'), 11, 'fri', 4))
     })
+
+    test('dow', function() {
+	assert.equal('tue', so.dow(new Date('2018-01-01'), 2, 6))
+    })
 })

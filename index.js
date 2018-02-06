@@ -10,10 +10,8 @@ let dow_validate = function(t) {
     return ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].indexOf(t) !== -1
 }
 
-let dow2num = function(dow) {
-    return { 'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4, 'fri': 5, 'sat': 6,
-	     'sun': 0 }[dow]
-}
+let dow2num = { 'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4, 'fri': 5, 'sat': 6, 'sun': 0 }
+let num2dow = Object.assign({}, ...Object.entries(dow2num).map(([a,b]) => ({ [b]: a })))
 
 let dup = function(o) {
     return JSON.parse(JSON.stringify(o))
@@ -99,13 +97,15 @@ exports.parser = function(input, opt) {
 	return r
     }
 
-   let resolve = function(pdata) {
-	let r = {
-	    vars: pdata.vars,
-	    events: {}
-	}
+    // resolve all the dates in pdata, e.g., fri.4/11 becomes 23/11
+    let resolve = function(pdata) {
+	let variable = (name) => pdata.vars[name].val
 	let now = today()
+
+	let r = { vars: pdata.vars, events: {/* we are filling it */} }
 	pdata.events.forEach( evt => {
+	    let flag = (v) => evt.val.flags.indexOf(v) !== -1
+
 	    let cd = evt.val.cd
 	    let month = cd.month === '-' ? now.getMonth() + 1 : cd.month
 	    let date = cd.date
@@ -122,7 +122,9 @@ exports.parser = function(input, opt) {
 		    throw new ParseError(evt.line, `${date} is unsupported`)
 		}
 	    }
-	    r.events[`${date}/${month}`] = {
+
+	    let event_key = `${date}/${month}`
+	    r.events[event_key] = { // we have all the data for an entry
 		line: evt.line,
 		val: {
 		    hours: evt.val.hours,
@@ -130,11 +132,31 @@ exports.parser = function(input, opt) {
 		    desc: evt.val.desc
 		}
 	    }
+
+	    if (variable('double-holiday-if-saturday') === 'true'
+		&& flag('o')
+		&& exports.dow(now, month, date) === 'sun') {
+		let d = exports.date_next(now, month, date+1)
+		let holiday = `${d.getDate()}/${d.getMonth()+1}`
+		r.events[holiday] = r.events[event_key] // link to the cur event
+		r.events[holiday].val.flags += 'g' // mark as 'generated'
+	    }
 	})
 	return r
     }
 
     return {parse, resolve}
+}
+
+exports.date_next = function(today, /* human */month, date) {
+    let d = new Date(today)
+    d.setMonth(month-1)
+    d.setDate(date)
+    return d
+}
+
+exports.dow = function(today, /* human */month, date) {
+    return num2dow[exports.date_next(today, month, date).getDay()]
 }
 
 // return local day of the month, -1 on error
@@ -145,7 +167,7 @@ exports.dow_find = function(today, /* human */month, dow, week_num) {
     let last
     for (let date = 1; d.getMonth()+1 === month; ++date) {
 	d.setDate(date)
-	if (d.getDay() === dow2num(dow)) {
+	if (d.getDay() === dow2num[dow]) {
 	    last = d.getDate()
 	    counter++
 	}
@@ -159,7 +181,7 @@ exports.weekday_next = function(today, /*human*/month, dow) {
     d.setMonth(month-1)
     for (let date = d.getDate(); ; ++date) {
 	d.setDate(date)
-	if (d.getDay() === dow2num(dow)) return date
+	if (d.getDay() === dow2num[dow]) return date
     }
     // unreachable
 }
