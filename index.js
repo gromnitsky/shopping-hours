@@ -123,22 +123,18 @@ exports.parser = function(input, opt) {
 		}
 	    }
 
+	    // add a new resolved event
 	    let event_key = `${date}/${month}`
-	    r.events[event_key] = { // we have all the data for an entry
-		line: evt.line,
-		val: {
-		    hours: evt.val.hours,
-		    flags: evt.val.flags,
-		    desc: evt.val.desc
-		}
-	    }
+	    let event_data = dup(evt)
+	    delete event_data.val.cd
+	    r.events[event_key] = event_data
 
 	    if (variable('double-holiday-if-saturday') === 'true'
 		&& flag('o')
 		&& exports.dow(now, month, date) === 'sun') {
 		let d = exports.date_next(now, month, date+1)
 		let holiday = `${d.getDate()}/${d.getMonth()+1}`
-		r.events[holiday] = r.events[event_key] // link to the cur event
+		r.events[holiday] = dup(event_data) // copy to the cur event
 		r.events[holiday].val.flags += 'g' // mark as 'generated'
 	    }
 	})
