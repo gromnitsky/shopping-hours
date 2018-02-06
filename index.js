@@ -15,26 +15,13 @@ let dow2num = function(dow) {
 	     'sun': 0 }[dow]
 }
 
+let dup = function(o) {
+    return JSON.parse(JSON.stringify(o))
+}
+
 exports.parser = function(input, opt) {
     opt = opt || {}
     let today = () => new Date(opt.today || new Date())
-
-    // return local day of the month, -1 on error
-    let dow_find = function(/* human */month, dow, week_num) {
-	let d = new Date(today())
-	d.setMonth(month-1)
-	let counter = 0
-	let last
-	for (let day = 1; d.getMonth()+1 === month; ++day) {
-	    d.setDate(day)
-	    if (d.getDay() === dow2num(dow)) {
-		last = d.getDate()
-		counter++
-	    }
-	    if (counter === week_num) return d.getDate()
-	}
-	return week_num === -1 ? last : -1
-    }
 
     let parse_date = function(line, val) {
 	let mnorm = (str) => {
@@ -47,7 +34,7 @@ exports.parser = function(input, opt) {
 	let dnorm = (str) => {
 	    if (str === '-') return str
 
-	    let error = new ParseError(line, `invalid day: ${str}`)
+	    let error = new ParseError(line, `invalid date: ${str}`)
 	    str = str.toLowerCase()
 	    let n = Number(str)
 	    if (isNaN(n)) {
@@ -70,12 +57,8 @@ exports.parser = function(input, opt) {
 	    // FIXME
 	    throw new ParseError(line, `${val} is unsupported`)
 	}
-	let [day, month] = val.split('/')
-	return { day: dnorm(day), month: mnorm(month) }
-    }
-
-    let parse_hours_out_of = function(line, val) {
-	return val
+	let [date, month] = val.split('/')
+	return { date: dnorm(date), month: mnorm(month) }
     }
 
     let parse_hours_shopping = function(line, val) {
@@ -92,6 +75,7 @@ exports.parser = function(input, opt) {
 	    events: []
 	}
 	input.split(/\n/).forEach( (row, line) => {
+	    line++
 	    let m
 	    if ( (m = row.match(/^\s*([a-zA-Z0-9-_]+)\s*=\s*(.*)/))) {
 		// var assignment
@@ -104,11 +88,8 @@ exports.parser = function(input, opt) {
 		let cols = row.split(/\s+/)
 		r.events.push({
 		    line, val: {
-		    date: parse_date(line, cols[0]),
-			hours: {
-			    out_of: parse_hours_out_of(line, cols[1]),
-			    shopping: parse_hours_shopping(line, cols[1])
-			},
+			cd: parse_date(line, cols[0]),
+			hours: parse_hours_shopping(line, cols[1]),
 			flags: cols[2] || '-',
 			desc: cols.slice(3).join(' ')
 		    }
@@ -118,7 +99,69 @@ exports.parser = function(input, opt) {
 	return r
     }
 
-    return {parse}
+   let resolve = function(pdata) {
+	let r = {
+	    vars: pdata.vars,
+	    events: {}
+	}
+	let now = today()
+	pdata.events.forEach( evt => {
+	    let cd = evt.val.cd
+	    let month = cd.month === '-' ? now.getMonth() + 1 : cd.month
+	    let date = cd.date
+	    if (isNaN(Number(date))) {
+		if (date === '-') {
+		    date = now.getDate()
+		} else if (date.indexOf('.') !== -1) { // thu.last
+		    let [dow, week] = date.split('.')
+		    date = exports.dow_find(now, month, dow, Number(week))
+		} else if (/^sat|sun$/.test(date)) {
+		    date = exports.weekday_next(now, month, date)
+		} else {
+		    // FIXME
+		    throw new ParseError(evt.line, `${date} is unsupported`)
+		}
+	    }
+	    r.events[`${date}/${month}`] = {
+		line: evt.line,
+		val: {
+		    hours: evt.val.hours,
+		    flags: evt.val.flags,
+		    desc: evt.val.desc
+		}
+	    }
+	})
+	return r
+    }
+
+    return {parse, resolve}
+}
+
+// return local day of the month, -1 on error
+exports.dow_find = function(today, /* human */month, dow, week_num) {
+    let d = new Date(today)
+    d.setMonth(month-1)
+    let counter = 0
+    let last
+    for (let date = 1; d.getMonth()+1 === month; ++date) {
+	d.setDate(date)
+	if (d.getDay() === dow2num(dow)) {
+	    last = d.getDate()
+	    counter++
+	}
+	if (counter === week_num) return d.getDate()
+    }
+    return week_num === -1 ? last : -1
+}
+
+exports.weekday_next = function(today, /*human*/month, dow) {
+    let d = new Date(today)
+    d.setMonth(month-1)
+    for (let date = d.getDate(); ; ++date) {
+	d.setDate(date)
+	if (d.getDay() === dow2num(dow)) return date
+    }
+    // unreachable
 }
 
 exports.time = function(spec) {
@@ -149,5 +192,7 @@ if (__filename === process.argv[1]) {
     let fs = require('fs')
     let util = require('util')
     let parser = exports.parser(fs.readFileSync(process.argv[2]).toString())
-    console.log(util.inspect(parser.parse(), {depth: null}))
+    let pdata = parser.parse()
+    console.log(util.inspect(pdata, {depth: null}))
+    console.log(util.inspect(parser.resolve(pdata), {depth: null}))
 }

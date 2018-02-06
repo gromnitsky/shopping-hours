@@ -30,6 +30,10 @@ suite('Example', function() {
 	let p = so.parser('-/- 9:00-13:00,14:00-18:00')
 	assert.deepEqual([so.timerange('9:00-13:00'),
 			  so.timerange('14:00-18:00')],
-			 hours(p).shopping)
+			 hours(p))
+    })
+
+    test('dow_find', function() {
+	assert.equal(23, so.dow_find(new Date('2018-01-01'), 11, 'fri', 4))
     })
 })
