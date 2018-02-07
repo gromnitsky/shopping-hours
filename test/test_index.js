@@ -13,6 +13,11 @@ let r = function(input, d) {
     let p = sh.parse()
     return sh.resolve(d, p)
 }
+let b = function(input, d) {
+    let sh = s(input)
+    let p = sh.parse()
+    return sh.business(p, d)
+}
 
 suite('Example', function() {
 //    setup(function() {})
@@ -83,4 +88,10 @@ suite('Example', function() {
 sun/- :-:`, '2018-01-08')) // mon
     })
 
+    test('loop', function() {
+	assert.deepEqual({ status: 'closed', next: null },
+			 b('-/- :-:\n2/1 :-: o', '2018-01'))
+	assert.deepEqual({ status: 'closed', next: null },
+			 b('-/- :-:', '2018-01'))
+    })
 })

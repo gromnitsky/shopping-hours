@@ -231,9 +231,15 @@ exports.parser = function(input, opt) {
 	    }
 	}
 
-	let tomorrow
+	let tomorrow, started_from
 	while (1) {
 	    tomorrow = date_next(now)
+	    if (date2dm(tomorrow) === started_from) { // a defective calendar
+		tomorrow = null	// a store never opens!
+		break
+	    }
+	    if (!started_from) started_from = date2dm(tomorrow)
+
 	    cal = resolve(tomorrow, pdata)
 	    let range = cal.events[date2dm(tomorrow)].val.hours
 	    if ( !(range[0].from.h === range[0].to.h
