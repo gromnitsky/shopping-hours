@@ -3,41 +3,84 @@
 'use strict';
 
 let assert = require('assert')
+let util = require('util')
 let so = require('..')
 
-let hours = (p) => p.parse().events[0].val.hours
+let log = function(s) { console.log(util.inspect(s, {depth: null})) }
+let s = so.parser
+let r = function(input, d) {
+    let sh = s(input)
+    let p = sh.parse()
+    return sh.resolve(d, p)
+}
 
 suite('Example', function() {
-    setup(function() {
+//    setup(function() {})
+
+    test('parse failing', function() {
+	assert.throws( () => s('foo 0:0-0:0').parse(), /unsupported/)
+	assert.throws( () => s('/ 0:0-0:0').parse(), /invalid date/)
+	assert.throws( () => s('13/ 0:0-0:0').parse(), /invalid month/)
+	assert.throws( () => s('/13 0:0-0:0').parse(), /invalid date/)
+	assert.throws( () => s('x/y 0:0-0:0').parse(), /invalid date/)
+	assert.throws( () => s('32/ 0:0-0:0').parse(), /invalid date/)
+	assert.throws( () => s('31/13 0:0-0:0').parse(), /invalid month/)
+	assert.throws( () => s('zzz.last/12 0:0-0:0').parse(), /invalid date/)
+	assert.throws( () => s('fri.-2/12 0:0-0:0').parse(), /invalid date/)
+
+	assert.throws( () => s('1/1').parse(), /invalid time range/)
+	assert.throws( () => s('1/1 0:0').parse(), /invalid time range/)
+	assert.throws( () => s('1/1 20:40-19:40').parse(), /invalid time range/)
+	assert.throws( () => s('1/1 25:40-19:40').parse(), /invalid time/)
+	assert.throws( () => s('1/1 25:40:40-19:40').parse(), /invalid time/)
+	assert.throws( () => s('1/1 -').parse(), /invalid time/)
     })
 
-    test('timerange', function() {
+    test('parse', function() {
 	assert.deepEqual({
-	    from: {h:9, m:20},
-	    to: {h:10, m:1}
-	}, so.timerange('9:20-10:01'))
-
-	assert.throws(() => so.timerange('9:20-8:01'), /invalid time range/)
-	assert.throws(() => so.timerange('9:20-9:19'), /invalid time range/)
-	assert.throws(() => so.timerange('9:20'), /invalid time range/)
-
-	assert.throws(() => so.timerange('1:23:4:56'), /invalid time/)
-	assert.throws(() => so.timerange('1:'), /invalid time/)
-	assert.throws(() => so.timerange('1'), /invalid time/)
-    })
-
-    test('parse_hours_shopping', function() {
-	let p = so.parser('-/- 9:00-13:00,14:00-18:00')
-	assert.deepEqual([so.timerange('9:00-13:00'),
-			  so.timerange('14:00-18:00')],
-			 hours(p))
+	    vars: {},
+	    events:
+	    [ { line: 1,
+		val:
+		{ cd: { date: '-', month: '-' },
+		  hours:
+		  [ { from: { h: 9, m: 0 }, to: { h: 13, m: 0 } },
+		    { from: { h: 14, m: 0 }, to: { h: 18, m: 0 } } ],
+		  flags: '-',
+		  desc: '' } } ] }, s('-/- 9:00-13:00,14:00-18:00').parse())
     })
 
     test('dow_find', function() {
-	assert.equal(23, so.dow_find(new Date('2018-01-01'), 11, 'fri', 4))
+	assert(r('fri.4/11 :-:', '2018-01').events['23/11'])
     })
 
     test('dow', function() {
-	assert.equal('tue', so.dow(new Date('2018-01-01'), 2, 6))
+	assert.deepEqual({
+	    vars: { 'double-holiday-if-saturday':
+		    { line: 1, val: 'true' } },
+	    events:
+	    { '8/1':
+	      { line: 3,
+		val:
+		{ hours: [ { from: { h: 12, m: 0 }, to: { h: 15, m: 0 } } ],
+		  flags: 'og',
+		  desc: '' } },
+	      '7/1':
+	      { line: 3,
+		val:
+		{ hours: [ { from: { h: 12, m: 0 }, to: { h: 15, m: 0 } } ],
+		  flags: 'o',
+		  desc: '' } },
+	      '14/1':
+	      { line: 4,
+		val:
+		{ hours: [ { from: { h: 0, m: 0 }, to: { h: 0, m: 0 } } ],
+		  flags: '-',
+		  desc: '' } } } },
+			 r(`double-holiday-if-saturday=true
+-/- 9:00-13:00,14:00-18:00
+7/1 12:-15: o
+sun/- :-:`, '2018-01-08')) // mon
     })
+
 })

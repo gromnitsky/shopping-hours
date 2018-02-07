@@ -17,6 +17,77 @@ let dup = function(o) {
     return JSON.parse(JSON.stringify(o))
 }
 
+let time = function(spec) {
+    let error = new Error(`invalid time: ${spec}`)
+    let arr = spec.split(':')
+    if (arr.length !== 2) throw error
+
+    let [h, m] = arr.map( v => {
+	let n = Number(v)
+	if (isNaN(n) || n < 0) throw error
+	return n
+    });
+    if (h > 23 || h > 59) throw error
+    return {h, m}
+}
+
+let timerange = function(t) {
+    let error = new Error(`invalid time range: ${t}`)
+    let arr = t.split('-')
+    if (arr.length !== 2) throw error
+
+    let [from, to] = arr.map( v => time(v))
+    if (from.h > to.h || (from.h === to.h && from.m > to.m)) throw error
+    return {from, to}
+}
+
+let date2dm = function(d) {
+    return `${d.getDate()}/${d.getMonth()+1}`
+}
+
+let getdate = function(today, /* human */month, date) {
+    let d = new Date(today)
+    d.setMonth(month - 1)
+    d.setDate(date)
+    return d
+}
+
+let dow = function(today, /* human */month, date) {
+    return num2dow[getdate(today, month, date).getDay()]
+}
+
+// return local day of the month, -1 on error
+let dow_find = function(today, /* human */month, dow, week_num) {
+    let d = new Date(today)
+    d.setMonth(month-1)
+    let counter = 0
+    let last
+    for (let date = 1; d.getMonth()+1 === month; ++date) {
+	d.setDate(date)
+	if (d.getDay() === dow2num[dow]) {
+	    last = d.getDate()
+	    counter++
+	}
+	if (counter === week_num) return d.getDate()
+    }
+    return week_num === -1 ? last : -1
+}
+
+let weekday_next = function(today, /*human*/month, dow) {
+    let d = new Date(today)
+    d.setMonth(month-1)
+    for (let date = d.getDate(); ; ++date) {
+	d.setDate(date)
+	if (d.getDay() === dow2num[dow]) return date
+    }
+    // unreachable
+}
+
+let date_next = function(today, /* human */month, date) {
+    return getdate(today, month || today.getMonth() + 1,
+		   (date || today.getDate()) + 1)
+}
+
 exports.parser = function(input, opt) {
     opt = opt || {}
 
@@ -59,9 +130,9 @@ exports.parser = function(input, opt) {
     }
 
     let parse_hours_shopping = function(line, val) {
-	return val.split(',').map( v => {
+	return (val || '').split(',').map( v => {
 	    try {
-		return exports.timerange(v)
+		return timerange(v)
 	    } catch (e) { throw new ParseError(line, e.message) }
 	})
     }
@@ -98,7 +169,7 @@ exports.parser = function(input, opt) {
 
     // resolve all the dates in pdata, e.g., fri.4/11 becomes 23/11
     let resolve = function(today, pdata) {
-	let variable = (name) => pdata.vars[name].val
+	let variable = (name) => pdata.vars[name] && pdata.vars[name].val
 	let now = new Date(today || new Date())
 
 	let r = { vars: pdata.vars, events: {/* we are filling it */} }
@@ -113,9 +184,9 @@ exports.parser = function(input, opt) {
 		    date = now.getDate()
 		} else if (date.indexOf('.') !== -1) { // thu.last
 		    let [dow, week] = date.split('.')
-		    date = exports.dow_find(now, month, dow, Number(week))
+		    date = dow_find(now, month, dow, Number(week))
 		} else if (/^sat|sun$/.test(date)) {
-		    date = exports.weekday_next(now, month, date)
+		    date = weekday_next(now, month, date)
 		} else {
 		    // FIXME
 		    throw new ParseError(evt.line, `${date} is unsupported`)
@@ -130,8 +201,8 @@ exports.parser = function(input, opt) {
 
 	    if (variable('double-holiday-if-saturday') === 'true'
 		&& flag('o')
-		&& exports.dow(now, month, date) === 'sun') {
-		let d = exports.date_next(now, month, date)
+		&& dow(now, month, date) === 'sun') {
+		let d = date_next(now, month, date)
 		let holiday = date2dm(d)
 		r.events[holiday] = dup(event_data) // copy to the cur event
 		r.events[holiday].val.flags += 'g' // mark as 'generated'
@@ -162,7 +233,7 @@ exports.parser = function(input, opt) {
 
 	let tomorrow
 	while (1) {
-	    tomorrow = exports.date_next(now)
+	    tomorrow = date_next(now)
 	    cal = resolve(tomorrow, pdata)
 	    let range = cal.events[date2dm(tomorrow)].val.hours
 	    if ( !(range[0].from.h === range[0].to.h
@@ -180,77 +251,6 @@ exports.parser = function(input, opt) {
     }
 
     return {parse, resolve, business}
-}
-
-let date2dm = function(d) {
-    return `${d.getDate()}/${d.getMonth()+1}`
-}
-
-let getdate = function(today, /* human */month, date) {
-    let d = new Date(today)
-    d.setMonth(month - 1)
-    d.setDate(date)
-    return d
-}
-
-exports.date_next = function(today, /* human */month, date) {
-    return getdate(today, month || today.getMonth() + 1,
-		   (date || today.getDate()) + 1)
-}
-
-exports.dow = function(today, /* human */month, date) {
-    return num2dow[getdate(today, month, date).getDay()]
-}
-
-// return local day of the month, -1 on error
-exports.dow_find = function(today, /* human */month, dow, week_num) {
-    let d = new Date(today)
-    d.setMonth(month-1)
-    let counter = 0
-    let last
-    for (let date = 1; d.getMonth()+1 === month; ++date) {
-	d.setDate(date)
-	if (d.getDay() === dow2num[dow]) {
-	    last = d.getDate()
-	    counter++
-	}
-	if (counter === week_num) return d.getDate()
-    }
-    return week_num === -1 ? last : -1
-}
-
-exports.weekday_next = function(today, /*human*/month, dow) {
-    let d = new Date(today)
-    d.setMonth(month-1)
-    for (let date = d.getDate(); ; ++date) {
-	d.setDate(date)
-	if (d.getDay() === dow2num[dow]) return date
-    }
-    // unreachable
-}
-
-exports.time = function(spec) {
-    let error = new Error(`invalid time: ${spec}`)
-    let arr = spec.split(':')
-    if (arr.length !== 2) throw error
-
-    let [h, m] = arr.map( v => {
-	let n = Number(v)
-	if (isNaN(n) || n < 0) throw error
-	return n
-    });
-    if (h > 23 || h > 59) throw error
-    return {h, m}
-}
-
-exports.timerange = function(t) {
-    let error = new Error(`invalid time range: ${t}`)
-    let arr = t.split('-')
-    if (arr.length !== 2) throw error
-
-    let [from, to] = arr.map( v => exports.time(v))
-    if (from.h > to.h || (from.h === to.h && from.m > to.m)) throw error
-    return {from, to}
 }
 
 if (__filename === process.argv[1]) {
