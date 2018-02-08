@@ -131,4 +131,11 @@ sun/- :-:
 	assert(r(cal, '2018-01').events['27/5'])
 	assert(r('easter_catholic :-:', '2019-01').events['21/4'])
     })
+
+    test('business failing', function() {
+	assert.throws( () => b('1/1 :-:', '2018-02-01'), /no default entry/)
+	assert.throws( () => b(`
+sat/- 11:00-16:00
+sun/- :-:`, '2018-02-10 18:01'), /no default entry/)
+    })
 })

@@ -246,7 +246,8 @@ let shopping_hours = function(input, opt) {
 	let now = new Date(today || new Date())
 	let dm = date2dm(now)
 	let entry = cal.events[dm]
-	if (!entry) throw new Error('no default entry in calendar')
+	let error_no_def = new Error('no default entry in calendar')
+	if (!entry) throw error_no_def
 
 	for (let range of entry.val.hours) {
 	    let start = new Date(now).setHours(range.from.h, range.from.m, 0)
@@ -271,7 +272,9 @@ let shopping_hours = function(input, opt) {
 	    if (!started_from) started_from = date2dm(tomorrow)
 
 	    cal = resolve(tomorrow, pdata)
-	    let range = cal.events[date2dm(tomorrow)].val.hours
+	    let events = cal.events[date2dm(tomorrow)]
+	    if (!events) throw error_no_def
+	    let range = events.val.hours
 	    if ( !(range[0].from.h === range[0].to.h
 		   && range[0].from.m === range[0].to.m)) {
 		tomorrow.setHours(range[0].from.h, range[0].from.m, 0)
