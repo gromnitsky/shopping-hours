@@ -94,4 +94,31 @@ sun/- :-:`, '2018-01-08')) // mon
 	assert.deepEqual({ status: 'closed', next: null },
 			 b('-/- :-:', '2018-01'))
     })
+
+    test('several weeks of festivities', function() {
+	let cal = `
+-/- 9:00-13:00,14:00-18:00
+1/1 :-: o
+2/1 :-: o
+3/1 :-: o
+4/1 :-: o
+5/1 :-: o
+8/1 :-: o
+9/1 :-: o
+10/1 :-: o
+11/1 :-: o
+12/1 :-: o
+#13/1
+#14/1
+sat/- 10:10-15:00
+sun/- :-:
+
+6/1 :-: o
+7/1 :-: o
+`
+//	log(r(cal, '2018-01'))
+	assert.deepEqual({ status: 'closed',
+			   next: new Date('2018-01-13T08:10:00.000Z') },
+			 b(cal, '2018-01'))
+    })
 })
