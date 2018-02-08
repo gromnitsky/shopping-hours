@@ -1,7 +1,7 @@
 {
     "name": "shopping-hours",
     "version": "0.0.1",
-    "description": "A flexible calendar for dynamic shopping hours calculations",
+    "description": "A flexible shopping-hours calendar & calculator",
     "main": "index.js",
     "dependencies": {
         "date-easter": "~0.2.2"
