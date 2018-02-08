@@ -88,8 +88,31 @@ let date_next = function(today, /* human */month, date) {
 		   (date || today.getDate()) + 1)
 }
 
+let plugin_easter = function(today) {
+    let easter = require('date-easter')
+
+    let my_easter = function(type) {
+	let e = easter[type](today)
+	return new Date(e.year, e.month-1, e.day)
+    }
+
+    let my_pentecost = function(type) {
+	let d = my_easter(type)
+	d.setDate(d.getDate() + 49)
+	return d
+    }
+
+    return {
+	easter_catholic: () => { return my_easter('gregorianEaster') },
+	pentecost_catholic: () => { return my_pentecost('gregorianEaster') },
+	easter_orthodox: () => { return my_easter('orthodoxEaster') },
+	pentecost_orthodox: () => { return my_pentecost('orthodoxEaster') }
+    }
+}
+
 let shopping_hours = function(input, opt) {
-    opt = opt || {}
+    opt = opt || { plugins: [] }
+    opt.plugins.push(plugin_easter)
 
     let parse_date = function(line, val) {
 	let mnorm = (str) => {
@@ -122,8 +145,9 @@ let shopping_hours = function(input, opt) {
 	}
 
 	if (val.indexOf('/') === -1) {
-	    // FIXME
-	    throw new ParseError(line, `${val} is unsupported`)
+	    if (opt.plugins.every( p => !p()[val]))
+		throw new ParseError(line, `${val} is unsupported`)
+	    return { date: val, month: null }
 	}
 	let [date, month] = val.split('/')
 	return { date: dnorm(date), month: mnorm(month) }
@@ -188,8 +212,14 @@ let shopping_hours = function(input, opt) {
 		} else if (/^sat|sun$/.test(date)) {
 		    date = weekday_next(now, month, date)
 		} else {
-		    // FIXME
-		    throw new ParseError(evt.line, `${date} is unsupported`)
+		    for (let p of opt.plugins) {
+			let func = p(now)[date]
+			if (func) {
+			    let val = func(); // must return a usual Date obj
+			    [month, date] = [val.getMonth()+1, val.getDate()]
+			    break
+			}
+		    }
 		}
 	    }
 

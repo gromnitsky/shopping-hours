@@ -10,10 +10,9 @@
 
 8/3			09:00-15:00		o	iwd
 
-# TODO
-#easter_orthodox		0:0-0:0			o
-#easter_catholic		0:0-0:0			o
-#pentecost_orthodox	0:0-0:0			o
+easter_orthodox		0:0-0:0			o	EO
+easter_catholic		11:00-17:00		-	EC
+pentecost_orthodox	0:0-0:0			o	PO
 
 1/5			11:00-17:30		o	why is it still a thing?
 9/5			11:00-17:30		o	1939-1945 remembrance

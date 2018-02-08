@@ -120,4 +120,15 @@ sun/- :-:
 			   next: new Date('2018-01-13T08:10:00.000Z') },
 			 b(cal, '2018-01'))
     })
+
+    test('plugin easter', function() {
+	let cal = 'pentecost_orthodox :-:'
+	let p = so(cal).parse()
+	assert.deepEqual({ date: 'pentecost_orthodox', month: null },
+			 p.events[0].val.cd)
+
+//	console.log(r(cal, '2018-01'))
+	assert(r(cal, '2018-01').events['27/5'])
+	assert(r('easter_catholic :-:', '2019-01').events['21/4'])
+    })
 })
