@@ -4,40 +4,40 @@
 
 let assert = require('assert')
 let util = require('util')
-let so = require('..')
+let sh = require('..')
 
 let log = function(s) { console.log(util.inspect(s, {depth: null})) }
 let r = function(input, d) {
-    let sh = so(input)
-    let p = sh.parse()
-    return sh.resolve(d, p)
+    let s = sh(input)
+    let p = s.parse()
+    return s.resolve(d, p)
 }
 let b = function(input, d) {
-    let sh = so(input)
-    let p = sh.parse()
-    return sh.business(p, d)
+    let s = sh(input)
+    let p = s.parse()
+    return s.business(p, d)
 }
 
 suite('Example', function() {
 //    setup(function() {})
 
     test('parse failing', function() {
-	assert.throws( () => so('foo 0:0-0:0').parse(), /unsupported/)
-	assert.throws( () => so('/ 0:0-0:0').parse(), /invalid date/)
-	assert.throws( () => so('13/ 0:0-0:0').parse(), /invalid month/)
-	assert.throws( () => so('/13 0:0-0:0').parse(), /invalid date/)
-	assert.throws( () => so('x/y 0:0-0:0').parse(), /invalid date/)
-	assert.throws( () => so('32/ 0:0-0:0').parse(), /invalid date/)
-	assert.throws( () => so('31/13 0:0-0:0').parse(), /invalid month/)
-	assert.throws( () => so('zzz.last/12 0:0-0:0').parse(), /invalid date/)
-	assert.throws( () => so('fri.-2/12 0:0-0:0').parse(), /invalid date/)
+	assert.throws( () => sh('foo 0:0-0:0').parse(), /unsupported/)
+	assert.throws( () => sh('/ 0:0-0:0').parse(), /invalid date/)
+	assert.throws( () => sh('13/ 0:0-0:0').parse(), /invalid month/)
+	assert.throws( () => sh('/13 0:0-0:0').parse(), /invalid date/)
+	assert.throws( () => sh('x/y 0:0-0:0').parse(), /invalid date/)
+	assert.throws( () => sh('32/ 0:0-0:0').parse(), /invalid date/)
+	assert.throws( () => sh('31/13 0:0-0:0').parse(), /invalid month/)
+	assert.throws( () => sh('zzz.last/12 0:0-0:0').parse(), /invalid date/)
+	assert.throws( () => sh('fri.-2/12 0:0-0:0').parse(), /invalid date/)
 
-	assert.throws( () => so('1/1').parse(), /invalid time range/)
-	assert.throws( () => so('1/1 0:0').parse(), /invalid time range/)
-	assert.throws( () => so('1/1 20:40-19:40').parse(), /invalid time range/)
-	assert.throws( () => so('1/1 25:40-19:40').parse(), /invalid time/)
-	assert.throws( () => so('1/1 25:40:40-19:40').parse(), /invalid time/)
-	assert.throws( () => so('1/1 -').parse(), /invalid time/)
+	assert.throws( () => sh('1/1').parse(), /invalid time range/)
+	assert.throws( () => sh('1/1 0:0').parse(), /invalid time range/)
+	assert.throws( () => sh('1/1 20:40-19:40').parse(), /invalid time range/)
+	assert.throws( () => sh('1/1 25:40-19:40').parse(), /invalid time/)
+	assert.throws( () => sh('1/1 25:40:40-19:40').parse(), /invalid time/)
+	assert.throws( () => sh('1/1 -').parse(), /invalid time/)
     })
 
     test('parse', function() {
@@ -51,7 +51,7 @@ suite('Example', function() {
 		  [ { from: { h: 9, m: 0 }, to: { h: 13, m: 0 } },
 		    { from: { h: 14, m: 0 }, to: { h: 18, m: 0 } } ],
 		  flags: '-',
-		  desc: '' } } ] }, so('-/- 9:00-13:00,14:00-18:00').parse())
+		  desc: '' } } ] }, sh('-/- 9:00-13:00,14:00-18:00').parse())
     })
 
     test('dow_find', function() {
@@ -123,7 +123,7 @@ sun/- :-:
 
     test('plugin easter', function() {
 	let cal = 'pentecost_orthodox :-:'
-	let p = so(cal).parse()
+	let p = sh(cal).parse()
 	assert.deepEqual({ date: 'pentecost_orthodox', month: null },
 			 p.events[0].val.cd)
 

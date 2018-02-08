@@ -2,16 +2,17 @@
 
 let fs = require('fs')
 let util = require('util')
-let so = require('..')
+let sh = require('..')
 
-let log = function(s) { console.log(util.inspect(s, {depth: null})) }
+let log = (s) => { console.log(util.inspect(s, {depth: null})) }
+let hr = () => console.log('-'.repeat(80))
 
-let sh = so(fs.readFileSync(process.argv[2]).toString())
-let pdata = sh.parse()
+let s = sh(fs.readFileSync(process.argv[2]).toString())
+let pdata = s.parse()
 log(pdata)
 
-console.log('-'.repeat(80))
-log(sh.resolve(process.argv[3], pdata))
+hr()
+log(s.resolve(process.argv[3], pdata))
 
-console.log('-'.repeat(80))
-console.log(sh.business(pdata, process.argv[3]))
+hr()
+log(s.business(pdata, process.argv[3]))
