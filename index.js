@@ -290,15 +290,3 @@ let shopping_hours = function(input, opt) {
 }
 
 module.exports = shopping_hours
-
-if (__filename === process.argv[1]) {
-    let fs = require('fs')
-    let util = require('util')
-    let so = shopping_hours(fs.readFileSync(process.argv[2]).toString())
-    let pdata = so.parse()
-    console.log(util.inspect(pdata, {depth: null}))
-    console.log('-'.repeat(80))
-    console.log(util.inspect(so.resolve(process.argv[3], pdata), {depth: null}))
-    console.log('-'.repeat(80))
-    console.log(so.business(pdata, process.argv[3]))
-}

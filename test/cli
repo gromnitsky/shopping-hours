@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+
+let fs = require('fs')
+let util = require('util')
+let so = require('..')
+
+let log = function(s) { console.log(util.inspect(s, {depth: null})) }
+
+let sh = so(fs.readFileSync(process.argv[2]).toString())
+let pdata = sh.parse()
+log(pdata)
+
+console.log('-'.repeat(80))
+log(sh.resolve(process.argv[3], pdata))
+
+console.log('-'.repeat(80))
+console.log(sh.business(pdata, process.argv[3]))
