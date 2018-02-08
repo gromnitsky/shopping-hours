@@ -1,0 +1,20 @@
+{
+    "name": "shopping-hours",
+    "version": "0.0.1",
+    "description": "A flexible calendar for dynamic shopping hours calculations",
+    "main": "index.js",
+    "dependencies": {
+        "date-easter": "~0.2.2"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/gromnitsky/shopping-hours.git"
+    },
+    "keywords": [
+        "calendar",
+        "shopping hours",
+        "easter"
+    ],
+    "author": "Alexander Gromnitsky",
+    "license": "MIT"
+}
