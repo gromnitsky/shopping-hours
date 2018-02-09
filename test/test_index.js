@@ -41,6 +41,8 @@ suite('Example', function() {
     })
 
     test('parse', function() {
+	assert.deepEqual({ vars: {}, events: [] }, sh().parse())
+
 	assert.deepEqual({
 	    vars: {},
 	    events:
@@ -52,6 +54,10 @@ suite('Example', function() {
 		    { from: { h: 14, m: 0 }, to: { h: 18, m: 0 } } ],
 		  flags: '-',
 		  desc: '' } } ] }, sh('-/- 9:00-13:00,14:00-18:00').parse())
+    })
+
+    test('resolve empty', function() {
+	assert.deepEqual({ vars: {}, events: [] }, r())
     })
 
     test('dow_find', function() {

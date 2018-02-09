@@ -110,7 +110,7 @@ let plugin_easter = function(today) {
     }
 }
 
-let shopping_hours = function(input, opt) {
+let shopping_hours = function(input = '', opt) {
     opt = opt || { plugins: [] }
     opt.plugins.push(plugin_easter)
 
