@@ -191,6 +191,18 @@ let shopping_hours = function(input = '', opt) {
 	return r
     }
 
+    let resolve_date_via_plugins = function(today, spec) {
+	for (let p of opt.plugins) {
+	    let func = p(today)[spec]
+	    if (func) {
+		let val = func(); // must return a usual Date obj
+		return [val.getDate(), val.getMonth()+1]
+	    }
+	}
+	// parser should have caught this
+	//throw new Error(`no plugin can resolve ${spec}`)
+    }
+
     // resolve all the dates in pdata, e.g., fri.4/11 becomes 23/11
     let resolve = function(today, pdata) {
 	let variable = (name) => pdata.vars[name] && pdata.vars[name].val
@@ -200,9 +212,8 @@ let shopping_hours = function(input = '', opt) {
 	pdata.events.forEach( evt => {
 	    let flag = (v) => evt.val.flags.indexOf(v) !== -1
 
-	    let cd = evt.val.cd
-	    let month = cd.month === '-' ? now.getMonth() + 1 : cd.month
-	    let date = cd.date
+	    let {month, date} = evt.val.cd
+	    if (month === '-') month = now.getMonth() + 1
 	    if (isNaN(Number(date))) {
 		if (date === '-') {
 		    date = now.getDate()
@@ -212,22 +223,14 @@ let shopping_hours = function(input = '', opt) {
 		} else if (/^sat|sun$/.test(date)) {
 		    date = weekday_next(now, month, date)
 		} else {
-		    for (let p of opt.plugins) {
-			let func = p(now)[date]
-			if (func) {
-			    let val = func(); // must return a usual Date obj
-			    [month, date] = [val.getMonth()+1, val.getDate()]
-			    break
-			}
-		    }
+		    [date, month] = resolve_date_via_plugins(now, date)
 		}
 	    }
 
 	    // add a new resolved event
-	    let event_key = `${date}/${month}`
 	    let event_data = dup(evt)
 	    delete event_data.val.cd
-	    r.events[event_key] = event_data
+	    r.events[`${date}/${month}`] = event_data
 
 	    if (variable('double-holiday-if-saturday') === 'true'
 		&& flag('o')
