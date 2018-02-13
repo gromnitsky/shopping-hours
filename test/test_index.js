@@ -144,4 +144,15 @@ sun/- :-:
 sat/- 11:00-16:00
 sun/- :-:`, '2018-02-10 18:01'), /no default entry/)
     })
+
+    test('weekday_next', function() {
+	let cal = `-/- 9:00-13:00,14:00-18:00
+sat/- :-:
+sun/- :-:`
+	assert(r(cal, '2018-01-24').events['27/1'])
+	assert(r(cal, '2018-01-24').events['28/1'])
+
+	assert(r(cal, '2018-01-31').events['3/2'])
+	assert(r(cal, '2018-01-31').events['4/2'])
+    })
 })

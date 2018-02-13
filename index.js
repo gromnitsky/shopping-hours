@@ -76,11 +76,9 @@ let dow_find = function(today, /* human */month, dow, week_num) {
 let weekday_next = function(today, /*human*/month, dow) {
     let d = new Date(today)
     d.setMonth(month-1)
-    for (let date = d.getDate(); ; ++date) {
-	d.setDate(date)
-	if (d.getDay() === dow2num[dow]) return date
-    }
-    // unreachable
+    while (d.getDay() !== dow2num[dow])
+	d.setDate(d.getDate() + 1)
+    return [d.getDate(), d.getMonth()+1]
 }
 
 let date_next = function(today, /* human */month, date) {
@@ -221,7 +219,7 @@ let shopping_hours = function(input = '', opt) {
 		    let [dow, week] = date.split('.')
 		    date = dow_find(now, month, dow, Number(week))
 		} else if (/^sat|sun$/.test(date)) {
-		    date = weekday_next(now, month, date)
+		    [date, month] = weekday_next(now, month, date)
 		} else {
 		    [date, month] = resolve_date_via_plugins(now, date)
 		}
