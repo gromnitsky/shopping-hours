@@ -1,6 +1,6 @@
 {
     "name": "shopping-hours",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "description": "A flexible shopping-hours calendar & calculator",
     "main": "index.js",
     "dependencies": {
