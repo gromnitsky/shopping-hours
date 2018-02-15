@@ -39,7 +39,7 @@ Create a simple calendar:
 
 ~~~
 $ node
-> sh = require('.')
+> sh = require('shopping-hours')
 [Function: shopping_hours]
 > cal = `-/- 9:00-13:00,14:00-18:00
 ... sat/- 11:00-16:00
