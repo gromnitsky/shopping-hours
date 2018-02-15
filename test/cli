@@ -8,11 +8,10 @@ let log = (s) => { console.log(util.inspect(s, {depth: null})) }
 let hr = () => console.log('-'.repeat(80))
 
 let s = sh(fs.readFileSync(process.argv[2]).toString())
-let pdata = s.parse()
-log(pdata)
+log(s.parsed_input)
 
 hr()
-log(s.resolve(process.argv[3], pdata))
+log(s.resolve(process.argv[3], s.parsed_input))
 
 hr()
-log(s.business(pdata, process.argv[3]))
+log(s.business(process.argv[3]))

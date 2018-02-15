@@ -189,6 +189,8 @@ let shopping_hours = function(input = '', opt) {
 	return r
     }
 
+    let parsed_input = parse()
+
     let resolve_date_via_plugins = function(today, spec) {
 	for (let p of opt.plugins) {
 	    let func = p(today)[spec]
@@ -242,7 +244,7 @@ let shopping_hours = function(input = '', opt) {
 	return r
     }
 
-    let business = function(pdata, today) {
+    let business = function(today, pdata = parsed_input) {
 	let cal = resolve(today, pdata)
 	let now = new Date(today || new Date())
 	let dm = date2dm(now)
@@ -290,7 +292,7 @@ let shopping_hours = function(input = '', opt) {
 	}
     }
 
-    return {parse, resolve, business}
+    return {parsed_input, parse, resolve, business}
 }
 
 module.exports = shopping_hours
