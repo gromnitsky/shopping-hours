@@ -70,7 +70,7 @@ let is_weekday = function(today, /* human */month, date) {
 // return local day of the month, -1 on error
 let dow_find = function(today, /* human */month, dow, week_num) {
     let d = new Date(today)
-    d.setMonth(month-1)
+    d.setMonth(month-1, 1)
     let counter = 0
     let last
     for (let date = 1; d.getMonth()+1 === month; ++date) {
@@ -81,7 +81,7 @@ let dow_find = function(today, /* human */month, dow, week_num) {
 	}
 	if (counter === week_num) return d.getDate()
     }
-    return week_num === -1 ? last : -1
+    return isNaN(week_num) ? last : -1
 }
 
 let weekday_next = function(today, /*human*/month, dow) {

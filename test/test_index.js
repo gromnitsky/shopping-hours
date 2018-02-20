@@ -59,6 +59,8 @@ suite('Example', function() {
 
     test('dow_find', function() {
 	assert(r('fri.4/11 :-:', '2018-01').events['23/11'])
+	assert(r('fri.last/8 :-:', '2018-01').events['31/8'])
+	assert(r('fri.last/8 :-:', '2018-08-31').events['31/8'])
     })
 
     test('dow', function() {
