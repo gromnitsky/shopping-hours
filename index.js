@@ -47,13 +47,18 @@ let date2dm = function(d) {
 
 let getdate = function(today, /* human */month, date) {
     let d = new Date(today)
-    d.setMonth(month - 1)
+    d.setMonth(month - 1, 1)
     d.setDate(date)
     return d
 }
 
 let dow = function(today, /* human */month, date) {
     return num2dow[getdate(today, month, date).getDay()]
+}
+
+let is_weekday = function(today, /* human */month, date) {
+    let s = month !== undefined ? dow(today, month, date) : num2dow[today.getDay()]
+    return /^(sat|sun)$/.test(s)
 }
 
 // return local day of the month, -1 on error
@@ -84,6 +89,24 @@ let weekday_next = function(today, /*human*/month, dow) {
 let date_next = function(today, /* human */month, date) {
     return getdate(today, month || today.getMonth() + 1,
 		   (date || today.getDate()) + 1)
+}
+
+let flag = function(event, flag_name) {
+    return event.val.flags.indexOf(flag_name) !== -1
+}
+
+let working_day_next = function(cal_resolved, today, month, date) {
+    let d = getdate(today, month, date)
+    while (is_weekday(d))
+	d.setDate(d.getDate() + 1)
+
+    let evt = cal_resolved.events[date2dm(d)]
+    if (evt && flag(evt, 'O')) {
+	// this day is already filled by a some auto-moved event, try
+	// for another one starting from tomorrow
+	return working_day_next(cal_resolved, d, d.getMonth()+1, d.getDate()+1)
+    }
+    return d
 }
 
 let plugin_easter = function(today) {
@@ -210,8 +233,6 @@ let shopping_hours = function(input = '', opt) {
 
 	let r = { vars: pdata.vars, events: {/* we are filling it */} }
 	pdata.events.forEach( evt => {
-	    let flag = (v) => evt.val.flags.indexOf(v) !== -1
-
 	    let {month, date} = evt.val.cd
 	    if (month === '-') month = now.getMonth() + 1
 	    if (isNaN(Number(date))) {
@@ -227,18 +248,20 @@ let shopping_hours = function(input = '', opt) {
 		}
 	    }
 
-	    // add a new resolved event
+	    // create a new resolved event
 	    let event_data = dup(evt)
 	    delete event_data.val.cd
-	    r.events[`${date}/${month}`] = event_data
 
+	    let dm = `${date}/${month}`
 	    if (variable('double-holiday-if-saturday') === 'true'
-		&& flag('o')
-		&& dow(now, month, date) === 'sun') {
-		let d = date_next(now, month, date)
-		let holiday = date2dm(d)
-		r.events[holiday] = dup(event_data) // copy to the cur event
-		r.events[holiday].val.flags += 'g' // mark as 'generated'
+		&& flag(evt, 'o')
+		&& is_weekday(now, month, date)) {
+		// auto-move this 'official' holiday
+		let holiday = date2dm(working_day_next(r, now, month, date))
+		r.events[holiday] = event_data
+		r.events[holiday].val.flags += 'O' // mark as auto-moved
+	    } else {
+		r.events[dm] = event_data
 	    }
 	})
 	return r

@@ -62,6 +62,11 @@ suite('Example', function() {
     })
 
     test('dow', function() {
+	let r1 = r(`double-holiday-if-saturday=true
+-/- 9:00-13:00,14:00-18:00
+7/1 12:-15: o
+sun/- :-:`, '2018-01-08')	// mon
+//	log(r1)
 	assert.deepEqual({
 	    vars: { 'double-holiday-if-saturday':
 		    { line: 1, val: 'true' } },
@@ -70,24 +75,14 @@ suite('Example', function() {
 	      { line: 3,
 		val:
 		{ hours: [ { from: { h: 12, m: 0 }, to: { h: 15, m: 0 } } ],
-		  flags: 'og',
-		  desc: '' } },
-	      '7/1':
-	      { line: 3,
-		val:
-		{ hours: [ { from: { h: 12, m: 0 }, to: { h: 15, m: 0 } } ],
-		  flags: 'o',
+		  flags: 'oO',
 		  desc: '' } },
 	      '14/1':
 	      { line: 4,
 		val:
 		{ hours: [ { from: { h: 0, m: 0 }, to: { h: 0, m: 0 } } ],
 		  flags: '-',
-		  desc: '' } } } },
-			 r(`double-holiday-if-saturday=true
--/- 9:00-13:00,14:00-18:00
-7/1 12:-15: o
-sun/- :-:`, '2018-01-08')) // mon
+		  desc: '' } } } }, r1)
     })
 
     test('loop', function() {
@@ -151,5 +146,82 @@ sun/- :-:`
 
 	assert(r(cal, '2018-01-31').events['3/2'])
 	assert(r(cal, '2018-01-31').events['4/2'])
+    })
+
+    test('auto-moved-holidays', function() {
+	let cal1 = `-/- 9:00-18:00
+1/9 :-: o first
+2/9 :-: o second
+sat/- :-: - sat
+sun/- :-: - sun
+double-holiday-if-saturday = true`
+	let r1 = r(cal1, '2018-09-01')
+	assert.deepEqual({
+	    vars: { 'double-holiday-if-saturday': { line: 6, val: 'true' } },
+	    events:
+	    { '1/9':
+	      { line: 4,
+		val:
+		{ hours: [ { from: { h: 0, m: 0 }, to: { h: 0, m: 0 } } ],
+		  flags: '-',
+		  desc: 'sat' } },
+	      '3/9':
+	      { line: 2,
+		val:
+		{ hours: [ { from: { h: 0, m: 0 }, to: { h: 0, m: 0 } } ],
+		  flags: 'oO',
+		  desc: 'first' } },
+	      '4/9':
+	      { line: 3,
+		val:
+		{ hours: [ { from: { h: 0, m: 0 }, to: { h: 0, m: 0 } } ],
+		  flags: 'oO',
+		  desc: 'second' } },
+	      '2/9':
+	      { line: 5,
+		val:
+		{ hours: [ { from: { h: 0, m: 0 }, to: { h: 0, m: 0 } } ],
+		  flags: '-',
+		  desc: 'sun' } } } }, r1)
+
+	let cal2 = `-/- 9:00-18:00
+1/9 :-: o first
+2/9 :-: o second
+sat/- :-: - sat
+sun/- :-: - sun
+3/9 10:00-12:00 a short day
+double-holiday-if-saturday = true`
+	let r2 = r(cal2, '2018-08-31')
+	assert.deepEqual(
+	    { '31/8':
+	      { line: 1,
+		val:
+		{ hours: [ { from: { h: 9, m: 0 }, to: { h: 18, m: 0 } } ],
+		  flags: '-',
+		  desc: '' } },
+	      '3/9':
+	      { line: 6,
+		val:
+		{ hours: [ { from: { h: 10, m: 0 }, to: { h: 12, m: 0 } } ],
+		  flags: 'a',
+		  desc: 'short day' } },
+	      '4/9':
+	      { line: 3,
+		val:
+		{ hours: [ { from: { h: 0, m: 0 }, to: { h: 0, m: 0 } } ],
+		  flags: 'oO',
+		  desc: 'second' } },
+	      '1/9':
+	      { line: 4,
+		val:
+		{ hours: [ { from: { h: 0, m: 0 }, to: { h: 0, m: 0 } } ],
+		  flags: '-',
+		  desc: 'sat' } },
+	      '2/9':
+	      { line: 5,
+		val:
+		{ hours: [ { from: { h: 0, m: 0 }, to: { h: 0, m: 0 } } ],
+		  flags: '-',
+		  desc: 'sun' } } }, r2.events)
     })
 })
