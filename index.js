@@ -45,6 +45,12 @@ let date2dm = function(d) {
     return `${d.getDate()}/${d.getMonth()+1}`
 }
 
+let date_from = function(s) {
+    let d = new Date(s)
+    if (isNaN(d)) throw new Error(`invalid date: ${s}`)
+    return d
+}
+
 let getdate = function(today, /* human */month, date) {
     let d = new Date(today)
     d.setMonth(month - 1, 1)
@@ -229,7 +235,7 @@ let shopping_hours = function(input = '', opt) {
     // resolve all the dates in pdata, e.g., fri.4/11 becomes 23/11
     let resolve = function(today, pdata) {
 	let variable = (name) => pdata.vars[name] && pdata.vars[name].val
-	let now = new Date(today || new Date())
+	let now = date_from(today || new Date())
 
 	let r = { vars: pdata.vars, events: {/* we are filling it */} }
 	pdata.events.forEach( evt => {
@@ -269,7 +275,7 @@ let shopping_hours = function(input = '', opt) {
 
     let business = function(today, pdata = parsed_input) {
 	let cal = resolve(today, pdata)
-	let now = new Date(today || new Date())
+	let now = date_from(today || new Date())
 	let dm = date2dm(now)
 	let entry = cal.events[dm]
 	let error_no_def = new Error('no default entry in calendar')
