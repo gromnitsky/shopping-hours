@@ -62,13 +62,13 @@ suite('Example', function() {
     })
 
     test('dow', function() {
-	let r1 = r(`double-holiday-if-saturday=true
+	let r1 = r(`auto-move-holidays=true
 -/- 9:00-13:00,14:00-18:00
 7/1 12:-15: o
 sun/- :-:`, '2018-01-08')	// mon
 //	log(r1)
 	assert.deepEqual({
-	    vars: { 'double-holiday-if-saturday':
+	    vars: { 'auto-move-holidays':
 		    { line: 1, val: 'true' } },
 	    events:
 	    { '8/1':
@@ -154,10 +154,10 @@ sun/- :-:`
 2/9 :-: o second
 sat/- :-: - sat
 sun/- :-: - sun
-double-holiday-if-saturday = true`
+auto-move-holidays = true`
 	let r1 = r(cal1, '2018-09-01')
 	assert.deepEqual({
-	    vars: { 'double-holiday-if-saturday': { line: 6, val: 'true' } },
+	    vars: { 'auto-move-holidays': { line: 6, val: 'true' } },
 	    events:
 	    { '1/9':
 	      { line: 4,
@@ -190,7 +190,7 @@ double-holiday-if-saturday = true`
 sat/- :-: - sat
 sun/- :-: - sun
 3/9 10:00-12:00 a short day
-double-holiday-if-saturday = true`
+auto-move-holidays = true`
 	let r2 = r(cal2, '2018-08-31')
 	assert.deepEqual(
 	    { '31/8':

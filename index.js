@@ -253,7 +253,7 @@ let shopping_hours = function(input = '', opt) {
 	    delete event_data.val.cd
 
 	    let dm = `${date}/${month}`
-	    if (variable('double-holiday-if-saturday') === 'true'
+	    if (variable('auto-move-holidays') === 'true'
 		&& flag(evt, 'o')
 		&& is_weekday(now, month, date)) {
 		// auto-move this 'official' holiday

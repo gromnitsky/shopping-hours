@@ -30,4 +30,4 @@ sat/-			10:30-17:00
 sun/-			0:0-0:0
 
 # for 'o' events only, unless it's explicitly overridden
-double-holiday-if-saturday = true
+auto-move-holidays = true
