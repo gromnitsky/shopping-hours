@@ -4,11 +4,12 @@ A flexible shopping-hours calendar & calculator.
 
 | `dist/*`                | lang  | type | minified |
 |-------------------------| ----- | ---- | -------- |
-| `shopping_hours.min.js` | es5   | UMD  | x        |
+| `shopping_hours.min.js` | es5†  | UMD  | x        |
 | `shopping_hours.js`     | es6   | UMD  |          |
 
+(† may require [babel-polyfill](https://babeljs.io/docs/usage/polyfill/))
+
 * ~8.6KB minified.
-* Uses a standard JS `Date` object.
 * Moveable feasts (Easter & Pentecost).
 * User-provided plugins for moveble dates.
 * Elastic dates as `fri.4/11` (the 4th Friday of November),
@@ -99,7 +100,7 @@ available date, which in this case is Monday.
 
 ## DSL
 
-(See the comprehensive example in `test/calendar1.txt`.)
+(See a comprehensive example in `test/calendar1.txt`.)
 
 The DSL is line-oriented. Lines starting w/ `#` or empty lines are
 ignored.
@@ -168,7 +169,66 @@ fall on a Sat or Sun.
 
 ## API
 
-TODO
+The lib operates in 3 distinct, consecutive phases: parsing, resolving
+& calculation. The idea is: you parse a cal only once, then invoke a
+calc fn as much you need (i.e., in a timer).
+
+To feel all 3 steps in a row, run `test/cli test/calendar1.txt`.
+
+	let sh = require('shopping-hours')
+
+### 1. Parsing
+
+~~~typescript
+function sh(calendar: string, opt?: Options): SH;
+
+interface SH {
+    parsed_input: CalendarParsed;
+    parse(): CalendarParsed;
+    resolve(today: Date, pdata: CalendarParsed): Object;
+    business(today?: Date, pdata?: CalendarParsed): Status;
+}
+~~~
+
+`sh` internally invokes `#parse()` & assignes the result to
+`#parsed_input`. May raise `ParseError` on invalid input.
+
+`opt` allows passing a *plugin* that calculates moveble dates.
+
+~~~typescript
+interface Options {
+    plugins?: Array<(today: Date) => Object>;
+}
+~~~
+
+Look for `plugin_easter` in `index.js` for an example.
+
+### 2. Resolving
+
+~~~typescript
+SH.resolve(today: Date, pdata: CalendarParsed): Object;
+~~~
+
+The next step is to resolve all `sun/-` et al. defs to actual
+dates. You don't need to invoke this fn, the calc step does it autom.
+
+### 3. Calculating
+
+~~~typescript
+SH.business(today?: Date, pdata?: CalendarParsed): Status;
+
+interface Status {
+    status: "open" | "closed";
+    next: Date | null;
+}
+~~~
+
+The fn you invoke to get the status of a 'store' according to the
+`today` param. If no `today` is passed, the new `Date()` object is
+used.
+
+`Status#next` may be `null` if a loop in the cal is detected (no EDs
+have a useful 'working hours' range).
 
 ## License
 
