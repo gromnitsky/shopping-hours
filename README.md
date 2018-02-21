@@ -127,7 +127,7 @@ override an ED, add another one to the end of the cal.
 `easter_catholic`. The premise of the latter is to allow complex
 moving dates. The API allows to add user-defined words.
 
-`month` in `day/month` has 2 forms: a digit or `-` char that auto
+`month` in `day/month` has 2 forms: a digit or `-` char that is auto
 replaced by the cur month.
 
 `day` has 3 forms: a digit, `-` (auto replaced by a cur day) or
@@ -135,12 +135,12 @@ replaced by the cur month.
 `spec` is either a digit of a word `last`. E.g., `fri.4` means the 4th
 Friday of the month, `mon.last` -- the last Monday.
 
-`timeranges` ('working hours') are a list of `HH:MM-HH:MM` range pairs
+`timeranges` ('working hours') are a list of `HH:MM-HH:MM` pairs
 separated by commas. E.g.. `9:00-13:00,14:00-18:00` (or even just
 `:-:`, where missing digits are auto substituted by 0s). An empty
 range `0:0-0:0` means there are no working hours for the day.
 
-`flags` is a string of chars, where each char means smthg to the
+`flags` is a string, in which each char means smthg to the
 resolver. `o` is should be used for the 'official' gov holidays, `-`
 for any other event. No flag == `-`. Regular sat/sun EDs should *not*
 use the `o` flag.
@@ -152,7 +152,7 @@ A suggested order of EDs:
 
 ~~~
 # a requried default event, when no other dates match
--/-	9:00-18:00
+-/- 9:00-18:00
 # a specific date
 24/8 :-: o Independence Day
 # a regular weekend
