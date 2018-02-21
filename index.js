@@ -101,7 +101,7 @@ let flag = function(event, flag_name) {
     return event.val.flags.indexOf(flag_name) !== -1
 }
 
-let working_day_next = function(cal_resolved, today, month, date) {
+let working_day_next = function(cal_resolved, today, /*human*/month, date) {
     let d = getdate(today, month, date)
     while (is_weekday(d))
 	d.setDate(d.getDate() + 1)
@@ -130,10 +130,10 @@ let plugin_easter = function(today) {
     }
 
     return {
-	easter_catholic: () => { return my_easter('gregorianEaster') },
-	pentecost_catholic: () => { return my_pentecost('gregorianEaster') },
-	easter_orthodox: () => { return my_easter('orthodoxEaster') },
-	pentecost_orthodox: () => { return my_pentecost('orthodoxEaster') }
+	easter_catholic() { return my_easter('gregorianEaster') },
+	pentecost_catholic() { return my_pentecost('gregorianEaster') },
+	easter_orthodox() { return my_easter('orthodoxEaster') },
+	pentecost_orthodox() { return my_pentecost('orthodoxEaster') }
     }
 }
 
