@@ -7,7 +7,7 @@ A flexible shopping-hours calendar & calculator.
 | `shopping_hours.min.js` | es5   | UMD  | x        |
 | `shopping_hours.js`     | es6   | UMD  |          |
 
-* ~8KB minified.
+* ~8.6KB minified.
 * Uses a standard JS `Date` object.
 * Moveable feasts (Easter & Pentecost).
 * User-provided plugins for moveble dates.
@@ -99,7 +99,72 @@ available date, which in this case is Monday.
 
 ## DSL
 
-TODO
+(See the comprehensive example in `test/calendar1.txt`.)
+
+The DSL is line-oriented. Lines starting w/ `#` or empty lines are
+ignored.
+
+There are 2 types of expressions: variable assignments (VA) & event
+definitions (ED).
+
+VAs can appear in any order. Their goal is to change a
+parsing/resolving/calculating behaviour. The VA syntax is:
+
+	name = value
+
+`value` is preserved verbatim.
+
+EDs syntax is:
+
+	date timeranges flags desc
+
+(`flags` & `desc` are optional.)
+
+EDs are analysed in order of increasing precedence. If you want to
+override an ED, add another one to the end of the cal.
+
+`date` has 2 forms: `day/month` or a single word like
+`easter_catholic`. The premise of the latter is to allow complex
+moving dates. The API allows to add user-defined words.
+
+`month` in `day/month` has 2 forms: a digit or `-` char that auto
+replaced by the cur month.
+
+`day` has 3 forms: a digit, `-` (auto replaced by a cur day) or
+`dayOfTheWeek.spec`, where `dayOfTheWeek` is one of mon-sun words &
+`spec` is either a digit of a word `last`. E.g., `fri.4` means the 4th
+Friday of the month, `mon.last` -- the last Monday.
+
+`timeranges` ('working hours') are a list of `HH:MM-HH:MM` range pairs
+separated by commas. E.g.. `9:00-13:00,14:00-18:00` (or even just
+`:-:`, where missing digits are auto substituted by 0s). An empty
+range `0:0-0:0` means there are no working hours for the day.
+
+`flags` is a string of chars, where each char means smthg to the
+resolver. `o` is should be used for the 'official' gov holidays, `-`
+for any other event. No flag == `-`. Regular sat/sun EDs should *not*
+use the `o` flag.
+
+`desc` is an arbitrary string. If you have a `desc` don't forget about
+the `flags`.
+
+A suggested order of EDs:
+
+~~~
+# a requried default event, when no other dates match
+-/-	9:00-18:00
+# a specific date
+24/8 :-: o Independence Day
+# a regular weekend
+sat/- 10:30-17:00
+sun/- :-:
+~~~
+
+### Supported variables
+
+`auto-move-holidays = true` turns on the auto moving of the 'official'
+holidays (marked w/ the `o` flag) to the next working day when they
+fall on a Sat or Sun.
 
 ## API
 
