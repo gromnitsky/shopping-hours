@@ -30,7 +30,7 @@ sun/-               0:0-0:0
 
 ## Why?
 
-TODO (explain how UA online stores work)
+http://gromnitsky.blogspot.com/2018/02/a-shopping-hours-calculator.html
 
 ## Quick Start
 
